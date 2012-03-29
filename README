@@ -1,0 +1,25 @@
+Text-Diethaml version 0.001
+
+Yet another converter from subsets of Haml language to Perl source code.
+
+INSTALLATION
+
+To install this module, run the following commands:
+
+	perl Makefile.PL
+	make
+	make test
+	make install
+
+
+DEPENDENCIES
+
+None.
+
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2012, MIZUTANI Tociyuki
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
