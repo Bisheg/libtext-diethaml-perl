@@ -1,5 +1,8 @@
 Revision history for Text-Diethaml
 
+0.004 Fri Mar 30 15:15:23 2012
+    ! **CHANGE BEHAVIOR** last attributes get high priority.
+
 0.003 Fri Mar 30 14:55:22 2012
     ! put perl source code related parts together.
 

@@ -20,11 +20,11 @@ disabled 1 readonly 1 multiple 1 selected 1 noresize 1 defer 1);
 my $escape=sub{my $t=defined $_[0]?$_[0]:q();$t=~s{([<>"'&\\])}{$special{$1}}egmsx;$t};
 my $_attr=sub{
  my(@a)=@_;my($t,$id,@class,%a)=('');
- while(my($k,$v)=splice @a,0,2){
+ while(@a and my($k,$v)=splice @a,-2){
   if($k eq 'id'){defined $id or $id=$v}
   elsif($k eq 'class'){push @class,$v}
-  elsif(! $bool{$k}){$a{$k}++or$t.=' '.$escape->($k).'="'.$escape->($v).'"'}
-  elsif($v){$a{$k}++or$t.=' '.$escape->($k).'="'.$escape->($k).'"'}
+  elsif(! $bool{$k}){$a{$k}++or$t=' '.$escape->($k).'="'.$escape->($v).'"'.$t}
+  elsif($v){$a{$k}++or$t=' '.$escape->($k).'="'.$escape->($k).'"'.$t}
  }
  if(@class){$t=' class="'.$escape->(join ' ',@class).'"'.$t}
  if(defined $id){$t=' id="'.$escape->($id).'"'.$t}

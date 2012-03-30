@@ -160,7 +160,8 @@ END_XML
 {
 # You can use as many such attribute functions
 
-    # In spite of HAML, Diethaml's attribute builder chooses the first pair.
+    # from 0.004, attribute chooses the last one as similar as HAML.
+    # <del>In spite of HAML, Diethaml's attribute builder chooses the first pair.</del>
 
 my $hash1 = sub{
     return (bread => 'white', filling => 'peanut butter and jelly');
@@ -175,7 +176,7 @@ my $input = <<'END_HAML';
 END_HAML
 
 my $expected = <<'END_XML';
-<sandwich bread="white" filling="peanut butter and jelly" delicious="true" />
+<sandwich filling="peanut butter and jelly" bread="whole wheat" delicious="true" />
 END_XML
 
     my $perl = Text::Diethaml->convert($input);
