@@ -1,5 +1,8 @@
 Revision history for Text-Diethaml
 
+0.003 Fri Mar 30 14:55:22 2012
+    ! put perl source code related parts together.
+
 0.002 Fri Mar 30 14:27:31 2012
     ! got rid of unnecessary if statement in convert().
 

@@ -3,7 +3,7 @@ use 5.008001;
 use strict;
 use warnings;
 
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 ## no critic qw(ComplexRegex PunctuationVar)
 my $XMLDECL = qq(<?xml version="1.0" encoding="utf-8" ?>\n);
 my $DOCTYPE = <<'EOS';
@@ -50,10 +50,44 @@ my @TYPE = $LEX =~ m/\#[[:digit:]]+:([[:alnum:]]+)/gmsx;
 
 sub convert {
     my($class, $haml) = @_;
+    my $result = q();
+    $class->_parse($haml, sub {
+        my($close, $open) = @_;
+        if ($close->{'opentag'}) {
+            $result .= _q($close->{'etag'} . "\n");
+        }
+        if ($open->{'type'} eq 'tag') {
+            $result .= join q(), _q("<$open->{name}"),
+                $open->{'attr'} ? qq/'. \x{24}_attr->($open->{attr}) .'/ : q(),
+                $open->{'sl'} ? qq( />\n) : q(>),
+                $open->{'opentag'} ? "\n" : q();
+        }
+        elsif ($open->{'type'} eq 'cmt') {
+            $result .= _q($open->{'cmt'}) . ($open->{'opentag'} ? "\n" : q());
+        }
+        elsif ($open->{'type'} eq 'doctype') {
+            $result .= _q($open->{'text'} =~ m/XML/msx ? $XMLDECL : $DOCTYPE);
+        }
+        if (my $mark = $open->{'mark'}) {
+            my $escape = $mark eq q(!=) ? q() : "\x{24}escape->";
+            $result .= $mark eq 'text' ? _q(qq/$open->{text}\n/)
+                : $mark eq q(-) ? qq/'; $open->{text}\n\x{24}_H .= '/
+                : qq/' . $escape(join q(), $open->{text}) . '\n/;
+        }
+        if ($open->{'eoltag'}) {
+            chomp $result;
+            $result .= _q($open->{'etag'} . "\n");
+        }
+    });
+    return $HEADER . qq/sub{my \x{24}_H='$result';return \x{24}_H;};\n/;
+}
+
+sub _parse {
+    my($class, $haml, $yield) = @_;
     chomp $haml;
     $haml .= "\n";
     my $null = {map { $_ => q() } qw(type mark text sl open etag)};
-    my($result, @stack) = (q());
+    my @stack;
     while ($haml =~ m{\G$LEX}gcmosx) {
         my $level = length $1;
         my $e = {%{$null}, 'type' => $TYPE[$#-], 'text' => $+};
@@ -82,49 +116,19 @@ sub convert {
                 $stack[-1][0] = $level;
                 last;
             }
-            $class->_inject(\$result, (pop @stack)->[1], $null);
+            $yield->((pop @stack)->[1], $null);
         }
         if (! @stack || $stack[-1][1] && $stack[-1][0] < $level) {
-            $class->_inject(\$result, $null, $e);
+            $yield->($null, $e);
             push @stack, [$level, $e];
         }
         else {
-            $class->_inject(\$result, $stack[-1][1], $e);
+            $yield->($stack[-1][1], $e);
             @{$stack[-1]} = ($level, $e);
         }
     }
     while (@stack) {
-        $class->_inject(\$result, (pop @stack)->[1], $null);
-    }
-    return $HEADER . qq/sub{my \x{24}_H='$result';return \x{24}_H;};\n/;
-}
-
-sub _inject {
-    my($class, $r, $prev, $cur) = @_;
-    if ($prev->{'opentag'}) {
-        ${$r} .= _q($prev->{'etag'} . "\n");
-    }
-    if ($cur->{'type'} eq 'tag') {
-        ${$r} .= join q(), _q("<$cur->{name}"),
-            $cur->{'attr'} ? qq/'. \x{24}_attr->($cur->{attr}) .'/ : q(),
-            $cur->{'sl'} ? qq( />\n) : q(>),
-            $cur->{'opentag'} ? "\n" : q();
-    }
-    elsif ($cur->{'type'} eq 'cmt') {
-        ${$r} .= _q($cur->{'cmt'}) . ($cur->{'opentag'} ? "\n" : q());
-    }
-    elsif ($cur->{'type'} eq 'doctype') {
-        ${$r} .= _q($cur->{'text'} =~ m/XML/msx ? $XMLDECL : $DOCTYPE);
-    }
-    if (my $mark = $cur->{'mark'}) {
-        my $escape = $mark eq q(!=) ? q() : "\x{24}escape->";
-        ${$r} .= $mark eq 'text' ? _q(qq/$cur->{text}\n/)
-            : $mark eq q(-) ? qq/'; $cur->{text}\n\x{24}_H .= '/
-            : qq/' . $escape(join q(), $cur->{text}) . '\n/;
-    }
-    if ($cur->{'eoltag'}) {
-        chomp ${$r};
-        ${$r} .= _q($cur->{'etag'} . "\n");
+        $yield->((pop @stack)->[1], $null);
     }
     return;
 }
@@ -159,7 +163,7 @@ Text::Diethaml - Subsets of Haml-Language to Perl source code
 
 =head1 VERSION
 
-0.002
+0.003
 
 =head1 SYNOPSIS
 

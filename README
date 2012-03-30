@@ -1,4 +1,4 @@
-Text-Diethaml version 0.002
+Text-Diethaml version 0.003
 
 Yet another converter from subsets of Haml language to Perl source code.
 
