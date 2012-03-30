@@ -3,7 +3,7 @@ use 5.008001;
 use strict;
 use warnings;
 
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 ## no critic qw(ComplexRegex PunctuationVar)
 my $XMLDECL = qq(<?xml version="1.0" encoding="utf-8" ?>\n);
 my $DOCTYPE = <<'EOS';
@@ -82,9 +82,7 @@ sub convert {
                 $stack[-1][0] = $level;
                 last;
             }
-            if (my $prev = (pop @stack)->[1]) {
-                $class->_inject(\$result, $prev, $null);
-            }
+            $class->_inject(\$result, (pop @stack)->[1], $null);
         }
         if (! @stack || $stack[-1][1] && $stack[-1][0] < $level) {
             $class->_inject(\$result, $null, $e);
@@ -161,7 +159,7 @@ Text::Diethaml - Subsets of Haml-Language to Perl source code
 
 =head1 VERSION
 
-0.001
+0.002
 
 =head1 SYNOPSIS
 
